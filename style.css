@@ -1,0 +1,85 @@
+body {
+     display: flex;
+     height: calc(100vh - 16px);
+
+}
+
+aside {
+     width: 20%;
+     background-color: lightgreen;
+}
+
+main {
+     background-color: antiquewhite;
+     flex-grow: 1;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+}
+
+td {
+     width: 9vh;
+     height: 9vh;
+     background-color: rgb(211, 198, 198);
+}
+
+.selected{
+     background-color:lime;
+}
+.neighbor{
+     background-color: #01ff0177;
+}
+td>div {
+     width: 80%;
+     height: 80%;
+     margin: 10%;
+     transition: 0.4s;
+
+}
+
+
+.red {
+     background-color: red;
+     border-radius: 40%;
+}
+
+.orange {
+     background-color: orange;
+    
+}
+
+.yellow {
+     background-color: yellow;
+     border-radius: 15%;
+     width: 80%;
+     height: 50%;
+}
+
+.green {
+     background-color: green;
+     border-radius: 20%;
+     width: auto;
+     height: 50%;
+     
+}
+
+.blue {
+     background-color: blue;
+     border-radius: 65%;
+     width: auto;
+     height: 60%;
+}
+
+.cyan {
+     background-color: cyan;
+     height: 95%;
+     border-radius: 15%;
+}
+
+.magenta {
+     background-color: magenta;
+     height: 65%;
+     width: 65%;
+     margin: 17.5%;
+     border-radius: 10%;
+}
