@@ -2,9 +2,17 @@ const boardSize = 10;
 const gameBoard = document.getElementById("gameBoard")
 const colors = ["red", "orange", "yellow", "green", "blue", "cyan", "magenta"];
 
-let falling , selected, neighbors = [];
+let falling, selected, neighbors = [];
 
 gameBoard.innerHTML = `<tr> ${'<td></td>'.repeat(boardSize)} </tr>`.repeat(boardSize)
+
+for (let y = 0; y < boardSize; y++) {
+     for (let x = 0; x < boardSize; x++) {
+          gameBoard.rows[y].cells[x].append(makeStone())
+     }
+}
+
+checkGroups()
 
 gameBoard.onclick = e => {
      if (falling || e.target == e.currentTarget) return
@@ -40,58 +48,62 @@ gameBoard.onclick = e => {
      neighbors.push(...gameBoard.querySelectorAll('.neighbor'))
 }
 
-for (let y = 0; y < boardSize; y++) {
-     for (let x = 0; x < boardSize; x++) {
-          gameBoard.rows[y].cells[x].append(makeStone())
-     }
-}
-
-checkGroups()
-
 function rnd(limit) {
      return Math.floor(Math.random() * limit)
 }
 
 function findSameColored(coords, found = []) {
      const [y, x] = coords.split(",")
-     const sameColored = [];
-     const color = gameBoard.rows[y].cells[x].children[0].className;
-     let nextColor = gameBoard.rows[y].cells[+x + 1]?.children[0].className;
+     const sameColored = []
+     const color = gameBoard.rows[y].cells[x].children[0].className
+     let nextColor = gameBoard.rows[y].cells[+x + 1]?.children[0].className
+
      if (color == nextColor) {
           const coords = `${y},${+x + 1}`;
+
           if (!found.includes(coords)) {
                sameColored.push(coords)
           }
      }
-     nextColor = gameBoard.rows[y].cells[x - 1]?.children[0].className;
+
+     nextColor = gameBoard.rows[y].cells[x - 1]?.children[0].className
+
      if (color == nextColor) {
           const coords = `${y},${x - 1}`;
+
           if (!found.includes(coords)) {
                sameColored.push(coords)
           }
      }
-     nextColor = gameBoard.rows[+y + 1]?.cells[x].children[0].className;
+
+     nextColor = gameBoard.rows[+y + 1]?.cells[x].children[0].className
+
      if (color == nextColor) {
           const coords = `${+y + 1},${x}`;
+
           if (!found.includes(coords)) {
                sameColored.push(coords)
           }
      }
-     nextColor = gameBoard.rows[y - 1]?.cells[x].children[0].className;
+
+     nextColor = gameBoard.rows[y - 1]?.cells[x].children[0].className
+
      if (color == nextColor) {
           const coords = `${y - 1},${x}`;
+
           if (!found.includes(coords)) {
                sameColored.push(coords)
           }
      }
-     return sameColored;
 
+     return sameColored
 }
 
 function findContinious(coords) {
      const found = [coords]
-     const unchecked = [coords];
+     const unchecked = [coords]
      const checked = [];
+
      do {
           const coords = unchecked.shift();
           const cells = findSameColored(coords, found)
@@ -101,30 +113,24 @@ function findContinious(coords) {
                if (!found.includes(cell)) {
                     found.push(cell);
                }
-               if (!unchecked.includes(cell)) {
+
+               if (!unchecked.includes(cell) && !checked.includes(cell)) {
                     unchecked.push(cell)
                }
           }
 
      } while (unchecked.length)
 
-     filterCells(found);
      return found
-}
-
-function filterCells(cells) {
-     for (let i = cells.length - 1; i >= 0; i--) {
-          const [y, x] = cells[i].split(",");
-          if (cells.includes(`${y - 1},${x}`) && cells.includes(`${+y + 1},${x}`)) continue
-
-     }
 }
 
 function findGroups() {
      const groups = [];
+
      for (let y = 0; y < boardSize; y++) {
           for (let x = 0; x < boardSize; x++) {
                const coords = y + ',' + x;
+
                if (!groups.flat().includes(coords)) {
                     groups.push(findContinious(coords))
                }
@@ -135,8 +141,10 @@ function findGroups() {
 
 function cleanUp(group) {
      const cleanGroup = [];
+
      for (const coords of group) {
           const [y, x] = coords.split(",");
+
           if (group.includes(`${y - 1},${x}`) && group.includes(`${y - 2},${x}`)) {
                cleanGroup.push(coords);
                continue;
@@ -178,21 +186,32 @@ function cleanUp(group) {
 
           }
      }
+
      return cleanGroup;
 }
 
 function remove(groups) {
+     const stones = []
+     let stone
+
      for (const group of groups) {
           for (const coords of group) {
                const [y, x] = coords.split(",")
-               gameBoard.rows[y].cells[x].innerHTML = "";
+               stone = gameBoard.rows[y].cells[x].children[0]
 
-
+               stone.style.transform = "scale(0)"
+               stones.push(stone)
           }
+     }
+
+     stone.ontransitionend = () => {
+          stones.forEach(stone => stone.remove())
+
+          fall()
      }
 }
 
-function fall() {   
+function fall() {
      const fallingStones = []
 
      for (let x = 0; x < boardSize; x++) {
@@ -224,10 +243,13 @@ function fall() {
      if (fallingStones.length) {
           falling = true
 
-          setTimeout(() => falling = false, 500)
-     }
+          fallingStones[0].ontransitionend = () => {
+               falling = false
+               fallingStones[0].ontransitionend = null
 
-     return fallingStones
+               checkGroups()
+          }
+     }
 }
 
 function makeStone() {
@@ -243,6 +265,7 @@ function switchPlaces(target) {
      const x1 = selected.cellIndex
      const y2 = target.parentElement.rowIndex
      const x2 = target.cellIndex
+     const wasSelected = selected;
 
      stone2.style.transform = `translate(calc(${x2 - x1} * (9vh + 4px)), calc(${y2 - y1} * (9vh + 4px)) )`
      stone1.style.transform = `translate(calc(${x1 - x2} * (9vh + 4px)), calc(${y1 - y2} * (9vh + 4px)) )`
@@ -253,12 +276,12 @@ function switchPlaces(target) {
           stone1.style.transform = stone2.style.transform = null
 
           stone1.ontransitionend = (() => {
-               stone1.ontransitionend = null;
+               stone1.ontransitionend = null
 
                if (!checkGroups()) {
-                    stone1.style.transform = `translate(calc(${x1 - x2} * (9vh + 4px)), calc(${y1 - y2} * (9vh + 4px)) )`
-                    stone2.style.transform = `translate(calc(${x2 - x1} * (9vh + 4px)), calc(${y2 - y1} * (9vh + 4px)) )`
-                    selected.append(stone1)
+                    stone2.style.transform = `translate(calc(${x1 - x2} * (9vh + 4px)), calc(${y1 - y2} * (9vh + 4px)) )`
+                    stone1.style.transform = `translate(calc(${x2 - x1} * (9vh + 4px)), calc(${y2 - y1} * (9vh + 4px)) )`
+                    wasSelected.append(stone1)
                     target.append(stone2)
 
                     setTimeout(() => {
@@ -274,9 +297,6 @@ function checkGroups() {
 
      if (groups.length) {
           remove(groups)
-          fall()
-
-          setTimeout(() => checkGroups(), 600)
      }
      return groups.length
 }
